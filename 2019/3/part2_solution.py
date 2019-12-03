@@ -9,41 +9,27 @@ def read_from_file(fp):
     return lines[0].strip().split(','), lines[1].strip().split(',')
 
 
-# trace wire along grid and store lowest number of steps required to reach each trace point
-def trace_wire(wire, grid):   
-    x = 0
-    y = 0
-    traced = set()
+# trace wire and add positions and steps as key-value pairs in hash map
+def trace_wire(wire):
+    trace = {}
+    x, y = 0, 0
     cumulative_steps = 0
-    for trace in wire:
-        direction = trace[0]
-        dist = int(trace[1:])
-        new_x, new_y = x, y
+    for step in wire:
+        direction = step[0]
+        dist = int(step[1:])
 
-        for step in range(1, dist+1):
+        for position in range(1, dist+1):
             cumulative_steps += 1
             if direction == 'R':
-                new_x = x + step
-                if (new_x,y) not in traced:
-                    grid[(new_x,y)].append(cumulative_steps)
-                    traced.add((new_x,y))
+                x += 1
             elif direction == 'L':
-                new_x = x - step
-                if (new_x,y) not in traced:
-                    grid[(new_x,y)].append(cumulative_steps)
-                    traced.add((new_x,y))
+                x -= 1
             elif direction == 'U':
-                new_y = y + step
-                if (x,new_y) not in traced:
-                    grid[(x,new_y)].append(cumulative_steps)
-                    traced.add((x,new_y))
+                y += 1
             elif direction == 'D':
-                new_y = y - step
-                if (x,new_y) not in traced:
-                    grid[(x,new_y)].append(cumulative_steps)
-                    traced.add((x,new_y))
-        x = new_x
-        y = new_y
+                y -= 1
+            trace[(x,y)] = cumulative_steps
+    return trace
 
 
 if __name__ == '__main__':
@@ -52,8 +38,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     wire1, wire2 = read_from_file(args.input)
-    grid = defaultdict(list)
-    trace_wire(wire1, grid)
-    trace_wire(wire2, grid)
-    fewest_steps = min([sum(value) for (key, value) in grid.items() if len(value) == 2 and key != (0,0)])
+    trace1 = trace_wire(wire1)
+    trace2 = trace_wire(wire2)
+    intersections = set(trace1.keys()).intersection(trace2.keys())
+    
+    fewest_steps = reduce(lambda x, y: min(trace1[y]+trace2[y], x), intersections, float('Inf'))
     print('The fewest numbers of steps wires must take to intersect is: {}'.format(fewest_steps))

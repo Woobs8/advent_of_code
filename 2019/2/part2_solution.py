@@ -35,7 +35,7 @@ def mult(source1, source2, target, memory):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='Advent of code 2019 - day 1, part 1')
+    parser = argparse.ArgumentParser(prog='Advent of code 2019 - day 2, part 2')
     parser.add_argument('input', help='path to input file', default='input.txt', nargs='?')
     args = parser.parse_args()
 

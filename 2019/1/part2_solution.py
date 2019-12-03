@@ -1,6 +1,14 @@
-from part1_solution import read_from_file, calc_fuel_req
 import argparse
 from functools import reduce
+
+
+def read_from_file(fp):
+    with open(fp) as f:
+        return [int(line.strip()) for line in f.readlines()]
+
+
+def calc_fuel_req(mass):
+    return mass // 3 - 2
 
 
 # recursively calculates the fuel required for a given mass, and adds it to the current fuel amount 

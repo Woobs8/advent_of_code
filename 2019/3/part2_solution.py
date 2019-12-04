@@ -11,25 +11,20 @@ def read_from_file(fp):
 
 # trace wire and add positions and steps as key-value pairs in hash map
 def trace_wire(wire):
+    # use imaginary numbers to track 2D position in one value
+    move = {'R':1, 'L':-1, 'U':1j, 'D':-1j}
     trace = {}
-    x, y = 0, 0
+    pos = 0
     cumulative_steps = 0
     for step in wire:
         direction = step[0]
         dist = int(step[1:])
-
-        for position in range(1, dist+1):
+        for __ in range(dist):
             cumulative_steps += 1
-            if direction == 'R':
-                x += 1
-            elif direction == 'L':
-                x -= 1
-            elif direction == 'U':
-                y += 1
-            elif direction == 'D':
-                y -= 1
-            trace[(x,y)] = cumulative_steps
-    return trace
+            pos += move[direction]
+            if pos not in trace:
+                trace[pos] = cumulative_steps
+    return trace    
 
 
 if __name__ == '__main__':

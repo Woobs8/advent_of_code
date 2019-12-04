@@ -11,22 +11,16 @@ def read_from_file(fp):
 
 # trace wire and add positions to a set
 def trace_wire(wire):
+    # use imaginary numbers to track 2D position in one value
+    move = {'R':1, 'L':-1, 'U':1j, 'D':-1j}
     trace = set()
-    x, y = 0, 0
+    pos = 0
     for step in wire:
         direction = step[0]
         dist = int(step[1:])
-
-        for position in range(1, dist+1):
-            if direction == 'R':
-                x += 1
-            elif direction == 'L':
-                x -= 1
-            elif direction == 'U':
-                y += 1
-            elif direction == 'D':
-                y -= 1
-            trace.add((x,y))
+        for __ in range(dist):
+            pos += move[direction]
+            trace.add(pos)
     return trace
 
 
@@ -40,5 +34,5 @@ if __name__ == '__main__':
     trace2 = trace_wire(wire2)
     intersections = trace1.intersection(trace2)
 
-    short_dist = reduce(lambda x, y: min(abs(y[0]) + abs(y[1]), x), intersections, float('Inf'))
+    short_dist = reduce(lambda x, y: min(abs(y.real) + abs(y.imag), x), intersections, float('Inf'))
     print('The Manhattan distance to the intersection closest to the central port is: {}'.format(short_dist))

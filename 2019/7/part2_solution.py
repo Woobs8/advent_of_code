@@ -2,6 +2,7 @@ import argparse
 from itertools import permutations
 import math
 from functools import reduce
+from collections import deque
 
 
 # intcode instructions
@@ -38,8 +39,9 @@ IMMEDIATE_MODE = 1
 
 
 # output codes
-NO_OUTPUT = None
-INPUT_REQUIRED = 1j
+OK = 1j
+INPUT_REQUIRED = -1j
+HALTED = 2j
 
 
 def read_from_file(fp):
@@ -49,7 +51,7 @@ def read_from_file(fp):
 
 # calculate the thruster output for all possible permutations of inputs
 def calc_max_thruster_output(valid_inputs, memory):
-    return reduce(lambda x, y: max(x, calc_phase_sequence_output(memory, y, 0)), permutations(valid_inputs), 0)
+    return reduce(lambda x, y: max(x, calc_phase_sequence_output(memory, y, 0)[-1]), permutations(valid_inputs), 0)
 
 
 # executes the program until reaching a halt operation and returns the recorded output as a list
@@ -59,9 +61,9 @@ def calc_phase_sequence_output(memory, phase_seq, input):
 
     # initialize programs
     for i in range(len(memory_pool)):
-        instr_idcs[i] = init_program(instr_idcs[i], memory_pool[i], phase_seq[i])
+        __, instr_idcs[i] = init_program(instr_idcs[i], memory_pool[i], [phase_seq[i]])
     
-    signal = input
+    signal = deque([input])
     # one loop of the pipeline
     while any(idx != None for idx in instr_idcs):
         # execute each program sequentially
@@ -71,49 +73,45 @@ def calc_phase_sequence_output(memory, phase_seq, input):
 
 
 # initalizes a program by running it until the first required input and supplying a specifed input parameter
-def init_program(instr_idx, memory, input):
+def init_program(instr_idx, memory, input: list):
+    in_buf = deque(input)
+    out_buf = deque()
     while instr_idx != None:
-        res, instr_idx = execute_instruction(instr_idx, memory)
+        res, instr_idx = execute_instruction(instr_idx, memory, in_buf, out_buf)
         if res == INPUT_REQUIRED:
-            __, instr_idx = execute_instruction(instr_idx, memory, input)
             break
-    return instr_idx
+    return out_buf, instr_idx
 
 
 # executes a program until input is required or it halts and return the output and the index of the next instruction
-def execute_until_halted(instr_idx, memory, input):
-    while instr_idx != None:
-        res, instr_idx = execute_instruction(instr_idx, memory)
-        if res == INPUT_REQUIRED:
-            if input != None:
-                res, instr_idx = execute_instruction(instr_idx, memory, input)
-                input = None
-            else:
-                break         
-        if res != NO_OUTPUT and res != INPUT_REQUIRED:
-            out = res
-    return out, instr_idx
+def execute_until_halted(instr_idx, memory, input: list):
+    in_buf = deque(input)
+    out_buf = deque()
+    res = OK
+    while instr_idx != None and res != HALTED and res != INPUT_REQUIRED:
+        res, instr_idx = execute_instruction(instr_idx, memory, in_buf, out_buf)        
+    return out_buf, instr_idx
 
 
-# executes a single instruction and returns the output and the next index of the next instruction
-def execute_instruction(instr_idx, memory, in_buf=None):
+# executes a single instruction and returns the status and the index of the next instruction
+def execute_instruction(instr_idx, memory, in_buf=deque(), out_buf=deque()):
     op = memory[instr_idx]
     op_len = int(math.log10(op))+1
 
     op_code, param_modes = get_op_code_and_param_modes(op)
+
     params = get_params(instr_idx, param_modes, memory)
-    out = NO_OUTPUT
     if op_code == ADD:
         memory[memory[instr_idx+3]] = params[0] + params[1]
     elif op_code == MULT:
         memory[memory[instr_idx+3]] = params[0] * params[1]
     elif op_code == INPUT:
-        if in_buf != None:
-            memory[memory[instr_idx+1]] = in_buf
+        if len(in_buf) <= 0:
+            return INPUT_REQUIRED, instr_idx 
         else:
-            return INPUT_REQUIRED, instr_idx
+            memory[memory[instr_idx+1]] = in_buf.popleft()
     elif op_code == OUTPUT:
-        out = params[0]
+        out_buf.append(params[0])
     elif op_code == JUMP_IF_TRUE:
         instr_idx = params[1] if params[0] != 0 else instr_idx + PARAM_COUNT[op_code] + 1
     elif op_code == JUMP_IF_FALSE:
@@ -123,7 +121,7 @@ def execute_instruction(instr_idx, memory, in_buf=None):
     elif op_code == EQUALS:
         memory[memory[instr_idx+3]] = 1 if params[0] == params[1] else 0
     elif op_code == HALT:
-        return NO_OUTPUT, None
+        return HALTED, None
     else:
         raise AssertionError('opcode {} does not exist. You messed up :('.format(op_code))
 
@@ -131,7 +129,7 @@ def execute_instruction(instr_idx, memory, in_buf=None):
     if op_code != JUMP_IF_TRUE and op_code != JUMP_IF_FALSE:
         instr_idx += PARAM_COUNT[op_code] + 1
 
-    return out, instr_idx
+    return OK, instr_idx
 
 
 def get_op_code_and_param_modes(op):

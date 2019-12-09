@@ -2,6 +2,7 @@ import argparse
 from itertools import permutations
 import math
 from functools import reduce
+from collections import deque
 
 
 ADD = 1
@@ -34,8 +35,9 @@ POSITION_MODE = 0
 IMMEDIATE_MODE = 1
 
 
-NO_OUTPUT = None
-INPUT_REQUIRED = 1j
+OK = 1j
+INPUT_REQUIRED = -1j
+HALTED = 2j
 
 
 def read_from_file(fp):
@@ -55,38 +57,33 @@ def calc_phase_sequence_output(phase_seq, memory):
 
 # executes the program until reaching a halt operation and returns the recorded output as a list
 def execute_from(instr_idx, memory, inputs):
-    input_idx = 0
-    out = []
-    while instr_idx != None:
-        res, instr_idx = execute_instruction(instr_idx, memory)
-        if res == INPUT_REQUIRED:
-            res, instr_idx = execute_instruction(instr_idx, memory, inputs[input_idx])
-            input_idx += 1
-        elif res != None:
-            out.append(res)
-    return out
+    in_buf = deque(inputs)
+    out_buf = deque()
+    res = OK
+    while instr_idx != None and res !=HALTED:
+        res, instr_idx = execute_instruction(instr_idx, memory, in_buf=in_buf, out_buf=out_buf)
+    return out_buf
 
 
-# executes a single instruction and returns the output and the next index of the next instruction
-def execute_instruction(instr_idx, memory, in_buf=None):
+# executes a single instruction and returns the status and the index of the next instruction
+def execute_instruction(instr_idx, memory, in_buf=deque(), out_buf=deque()):
     op = memory[instr_idx]
     op_len = int(math.log10(op))+1
 
     op_code, param_modes = get_op_code_and_param_modes(op)
 
     params = get_params(instr_idx, param_modes, memory)
-    out = NO_OUTPUT
     if op_code == ADD:
         memory[memory[instr_idx+3]] = params[0] + params[1]
     elif op_code == MULT:
         memory[memory[instr_idx+3]] = params[0] * params[1]
     elif op_code == INPUT:
-        if in_buf != None:
-            memory[memory[instr_idx+1]] = in_buf
+        if len(in_buf) <= 0:
+            return INPUT_REQUIRED, instr_idx 
         else:
-            return INPUT_REQUIRED, instr_idx
+            memory[memory[instr_idx+1]] = in_buf.popleft()
     elif op_code == OUTPUT:
-        out = params[0]
+        out_buf.append(params[0])
     elif op_code == JUMP_IF_TRUE:
         instr_idx = params[1] if params[0] != 0 else instr_idx + PARAM_COUNT[op_code] + 1
     elif op_code == JUMP_IF_FALSE:
@@ -96,7 +93,7 @@ def execute_instruction(instr_idx, memory, in_buf=None):
     elif op_code == EQUALS:
         memory[memory[instr_idx+3]] = 1 if params[0] == params[1] else 0
     elif op_code == HALT:
-        return NO_OUTPUT, None
+        return HALTED, None
     else:
         raise AssertionError('opcode {} does not exist. You messed up :('.format(op_code))
 
@@ -104,7 +101,7 @@ def execute_instruction(instr_idx, memory, in_buf=None):
     if op_code != JUMP_IF_TRUE and op_code != JUMP_IF_FALSE:
         instr_idx += PARAM_COUNT[op_code] + 1
 
-    return out, instr_idx
+    return OK, instr_idx
 
 
 def get_op_code_and_param_modes(op):

@@ -43,7 +43,7 @@ def render_image(pixels):
         for pixel in pixels[row*IMAGE_WIDTH:(row+1)*IMAGE_WIDTH]:
             color = PRINT_WHITE if pixel==WHITE else PRINT_BLACK
             print('\x1b[{}m \x1b[0m'.format(color), end='')
-        print('\n')
+        print('\n', end='')
 
 
 if __name__ == '__main__':

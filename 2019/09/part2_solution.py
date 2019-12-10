@@ -156,7 +156,7 @@ def BOOST_program(memory:list) -> int:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='Advent of code 2019 - day 7, part 1')
+    parser = argparse.ArgumentParser(prog='Advent of code 2019 - day 9, part 2')
     parser.add_argument('input', help='path to input file', default='input.txt', nargs='?')
     args = parser.parse_args()
 

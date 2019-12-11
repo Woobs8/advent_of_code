@@ -53,7 +53,7 @@ class IntcodeComputer():
     def execute(self, input:list, out:list) -> int:
         in_buf = deque(input)
         res = IntcodeComputer.OUTPUT_CODES.OK
-        while self.instr_idx != None and res !=IntcodeComputer.OUTPUT_CODES.HALTED and res !=IntcodeComputer.OUTPUT_CODES.HALTED:
+        while self.instr_idx != None and res !=IntcodeComputer.OUTPUT_CODES.HALTED:
             res, self.instr_idx, self.relative_base = IntcodeComputer._execute_instruction(self.instr_idx, 
                                                                 self.memory, 
                                                                 self.relative_base, 

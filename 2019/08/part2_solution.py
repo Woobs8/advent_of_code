@@ -1,5 +1,8 @@
 import argparse
 from collections import defaultdict
+import sys
+sys.path.append('..')
+from util.print_to_console import print_bw_image_to_console
 
 
 # image dimensions
@@ -24,8 +27,8 @@ def read_from_file(fp):
 
 
 # returns the pixel values after applying overlaying layers
-def get_pixels(digits):
-    image_size = IMAGE_HEIGHT*IMAGE_WIDTH
+def get_pixels(digits, width, height):
+    image_size = width*height
     layer_count = int(len(digits) / image_size)
     pixels = [None]*image_size
     for i in range(image_size):
@@ -38,12 +41,10 @@ def get_pixels(digits):
 
 
 # renders the image in the terminal
-def render_image(pixels):
-    for row in range(IMAGE_HEIGHT):
-        for pixel in pixels[row*IMAGE_WIDTH:(row+1)*IMAGE_WIDTH]:
-            color = PRINT_WHITE if pixel==WHITE else PRINT_BLACK
-            print('\x1b[{}m \x1b[0m'.format(color), end='')
-        print('\n', end='')
+def render_image(pixels, width, height):
+    # convert the list of pixels into a matrix based on the specified width and height
+    image_matrix = [pixels[i:i + width] for i in range(0, len(pixels), width)]
+    print_bw_image_to_console(image_matrix, WHITE, BLACK)
 
 
 if __name__ == '__main__':
@@ -52,5 +53,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     image_digits = read_from_file(args.input)
-    pixels = get_pixels(image_digits)
-    render_image(pixels)
+    pixels = get_pixels(image_digits, IMAGE_WIDTH, IMAGE_HEIGHT)
+    render_image(pixels, IMAGE_WIDTH, IMAGE_HEIGHT)

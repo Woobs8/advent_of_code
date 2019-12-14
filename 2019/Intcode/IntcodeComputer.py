@@ -50,14 +50,13 @@ class IntcodeComputer():
 
 
     # executes the program until reaching a halt operation
-    def execute(self, input:list, out:list) -> int:
-        in_buf = deque(input)
+    def execute(self, input:deque, out:list) -> int:
         res = IntcodeComputer.OUTPUT_CODES.OK
         while self.instr_idx != None and res !=IntcodeComputer.OUTPUT_CODES.HALTED and res !=IntcodeComputer.OUTPUT_CODES.INPUT_REQUIRED:
             res, self.instr_idx, self.relative_base = IntcodeComputer._execute_instruction(self.instr_idx, 
                                                                 self.memory, 
                                                                 self.relative_base, 
-                                                                in_buf=in_buf, 
+                                                                in_buf=input, 
                                                                 out_buf=out)
         return res
 

@@ -1,7 +1,8 @@
 import argparse
 import sys
 sys.path.append('..')
-from Intcode.IntcodeComputer import IntcodeComputer
+from intcode.IntcodeComputer import IntcodeComputer
+from collections import deque
 
 
 def read_from_file(fp:str) -> list:
@@ -12,7 +13,7 @@ def read_from_file(fp:str) -> list:
 def BOOST_program(memory:list) -> int:
     program = IntcodeComputer(memory)
     out = []
-    res = program.execute([2], out)
+    res = program.execute(deque([2]), out)
     return out.pop()
 
 

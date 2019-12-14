@@ -34,22 +34,14 @@ def simulate_moons_in_1D_until_repeat(moon_positions, dim):
     moon_pos_in_dim = [[pos[dim], pos[3]] for pos in moon_positions]
     steps = 0
     velocity_in_dim = [0]*len(moon_pos_in_dim)
-    state = get_state(moon_pos_in_dim, velocity_in_dim)
-    previous_states = {state:steps}
-    while True:
+    initial_state = (moon_pos_in_dim, velocity_in_dim)
+    state = None
+    while state != initial_state:
         steps += 1
         velocity_in_dim = apply_gravity_in_1D(moon_pos_in_dim, velocity_in_dim)
         moon_pos_in_dim = list(map(lambda x: move_moon_in_1D(x[0], x[1]), zip(moon_pos_in_dim, velocity_in_dim)))
-        state = get_state(moon_pos_in_dim, velocity_in_dim)
-        if state in previous_states.keys():
-            break
-        previous_states[state] = steps
-    return steps-previous_states[state]
-
-
-# create hashable state for efficient state lookup
-def get_state(position:list, velocity:list):
-    return reduce(lambda x, y: x+str(y[0]), position, '') + ''.join(str(e) for e in velocity)
+        state = (moon_pos_in_dim, velocity_in_dim)
+    return steps
 
 
 # apply the effects of gravity on velocities in 1D

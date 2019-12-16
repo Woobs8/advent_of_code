@@ -65,7 +65,7 @@ def play_game(memory:list, animate:bool=False, refresh_rate:int=20) -> int:
 
 
 # runs the initial step of the program and sets up the game board
-def init_board(program:list) -> Union[list, list, int, int]:
+def init_board(program:IntcodeComputer) -> Union[list, list, int, int]:
     out = []
     res = program.execute([], out)
     out = [out[i:i + 3] for i in range(0, len(out), 3)]  

@@ -1,7 +1,7 @@
 import argparse
 import sys
 sys.path.append('..')
-from intcode.IntcodeComputer import IntcodeComputer
+from Intcode.IntcodeComputer import IntcodeComputer
 from util.print_to_console import print_bw_image_to_console
 from typing import Union
 from enum import IntEnum

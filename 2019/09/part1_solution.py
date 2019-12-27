@@ -1,7 +1,7 @@
 import argparse
 import sys
 sys.path.append('..')
-from intcode.IntcodeComputer import IntcodeComputer
+from Intcode.IntcodeComputer import IntcodeComputer
 from collections import deque
 
 
